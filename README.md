@@ -1,4 +1,4 @@
-# minimal-repro
+# electron
 
 **Quickly create and share examples of Electron app behaviors or bugs.**
 
