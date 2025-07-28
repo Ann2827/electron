@@ -1,0 +1,68 @@
+name: 'CI'
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install
+        continue-on-error: false
+        run: npm ci
+
+      - name: Cache Save Node Modules
+        continue-on-error: false
+        id: cache-save
+        uses: actions/cache/save@v4
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-nodeModules
+
+      - name: Build
+        continue-on-error: false
+        run: npm run package
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: ./out
+          retention-days: 1
+
+  deploy:
+    needs: build
+    if: contains(github.ref, '/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to be able to publish a GitHub release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download Artifacts
+        continue-on-error: false
+        uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: ./out
+
+      - name: Cache Restore Node Modules
+        continue-on-error: false
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-nodeModules
+
+      # - name: Release
+      #   env:
+      #     GITHUB_TOKEN: ${{ vars.GITHUB_TOKEN }}
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #   run: yarn semantic-release
