@@ -32,7 +32,6 @@ jobs:
         with:
           name: package
           path: ./out
-          retention-days: 1
 
   deploy:
     needs: build
